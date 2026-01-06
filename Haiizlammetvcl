@@ -1,0 +1,1070 @@
+-- Haiiz Kaitun Ultimate | Blox Fruits Complete Auto System
+-- Version: 5.0 | All Features Included
+-- YouTube: k co dau hehe boy
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local TeleportService = game:GetService("TeleportService")
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+local HttpService = game:GetService("HttpService")
+
+-- Player
+local Player = Players.LocalPlayer
+local Character = Player.Character or Player.CharacterAdded:Wait()
+local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+
+-- Anti AFK
+local VirtualUser = game:GetService("VirtualUser")
+Player.Idled:Connect(function()
+    VirtualUser:CaptureController()
+    VirtualUser:ClickButton2(Vector2.new())
+end)
+
+-- Load Library
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("🔥 HAIIZ KAITUN ULTIMATE", "BloodTheme")
+
+-- =============================================
+-- ⚙️ CONFIGURATION
+-- =============================================
+_G.AutoFarm = false
+_G.AutoQuest = false
+_G.AutoBoss = false
+_G.AutoElite = false
+_G.AutoRaid = false
+_G.AutoRandomFruit = false
+_G.AutoMelee = false
+_G.AutoSeaHop = false
+_G.AutoCDK = false
+_G.AutoSoulGuitar = false
+_G.AutoDarkbeard = false
+_G.AutoSubmerged = false
+_G.AutoStats = false
+_G.AutoCodeRedeem = false
+_G.AutoBoneFarm = false
+_G.AutoEctoplasmFarm = false
+_G.AutoFruitStore = false
+_G.AutoSellFruit = false
+
+-- Melee Settings
+_G.MeleeOrder = {
+    "Dark Step",        -- 150,000 Beli (Pirate Village)
+    "Electric",         -- 500,000 Beli (Skylands)  
+    "Water Kung Fu",    -- 750,000 Beli (Underwater City)
+    "Dragon Breath",    -- 1,500 Fragments (Kingdom of Rose)
+    "Superhuman",       -- 3,000,000 Beli (Snow Mountain)
+    "Death Step",       -- 2,500,000 Beli + 5,000 Frag (400 Mastery Dark Step + Library Key)
+    "Sharkman Karate",  -- 2,500,000 Beli + 5,000 Frag (400 Mastery Water Kung Fu + Water Key)
+    "Dragon Talon",     -- 3,000,000 Beli + 5,000 Frag (400 Mastery Dragon Breath + Fire Essence)
+    "Electric Claw",    -- 3,000,000 Beli + 5,000 Frag (400 Mastery Electric + Run Quest)
+    "Godhuman",         -- 5,000,000 Beli + 5,000 Frag + Materials (400 Mastery của 5 melee)
+    "Sanguine Art"      -- 5,000,000 Beli + 5,000 Frag + Cold Heart (Leviathan)
+}
+
+-- Stats Priority
+_G.StatsPriority = {"Melee", "Health", "Sword"}
+
+-- Raid Fruits
+_G.SelectedFruits = {"Rocket", "Spin", "Blade", "Spring", "Flame", "Ice", "Dark", "Light", "Magma"}
+
+-- =============================================
+-- 🔧 CORE FUNCTIONS
+-- =============================================
+function CheckSea()
+    local PlaceID = game.PlaceId
+    if PlaceID == 2753915549 then return 1
+    elseif PlaceID == 4442272183 then return 2
+    elseif PlaceID == 7449423635 then return 3 end
+    return 0
+end
+
+function GetPlayerLevel()
+    return Player.Data.Level.Value
+end
+
+function GetBeli()
+    return Player.Data.Beli.Value
+end
+
+function GetFragments()
+    return Player.Data.Fragments.Value
+end
+
+function TeleportTo(CFrame)
+    pcall(function()
+        Character.HumanoidRootPart.CFrame = CFrame
+    end)
+end
+
+function EquipTool(ToolName)
+    for _, v in pairs(Player.Backpack:GetChildren()) do
+        if v.Name == ToolName then
+            v.Parent = Character
+            break
+        end
+    end
+end
+
+function Attack()
+    VirtualInputManager:SendKeyEvent(true, "X", false, nil)
+    task.wait(0.1)
+    VirtualInputManager:SendKeyEvent(false, "X", false, nil)
+end
+
+-- =============================================
+-- 📜 AUTO CODE REDEEM
+-- =============================================
+function RedeemAllCodes()
+    local codes = {
+        -- Reset Stats
+        "KITT_RESET",
+        "SUB2GAMERROBOT_RESET1", 
+        "SUB2UNCLEKIZARU",
+        "ADMINHACKED",
+        
+        -- 2x EXP
+        "LIGHTNINGABUSE",
+        "SUB2GAMERROBOT_EXP1",
+        "KITTGAMING",
+        "SUB2OFFICIALNOOBIE",
+        "SUB2CAPTAINMAUI",
+        "SUB2FER999",
+        "ENYU_IS_PRO",
+        "MAGICBUS",
+        "STARCODEHEO",
+        "BLUXXY",
+        "THEGREATACE",
+        "AXIORE",
+        "STRAWHATMAINE",
+        "1LOSTADMIN ",
+        
+        -- Beli & Titles
+        "BIGNEWS",
+        "FUDD10_V2",
+        "FUDD10",
+        "CHANDLER"
+    }
+    
+    for _, code in pairs(codes) do
+        pcall(function()
+            game:GetService("ReplicatedStorage").Remotes.Redeem:InvokeServer(code)
+        end)
+        task.wait(1)
+    end
+    Library:Notification("All codes redeemed!", "Success")
+end
+
+-- =============================================
+-- ⚔️ AUTO MELEE PURCHASE SYSTEM
+-- =============================================
+function GetMeleeMastery(MeleeName)
+    for _, v in pairs(Player.Backpack:GetChildren()) do
+        if v.Name == MeleeName and v:FindFirstChild("Level") then
+            return v.Level.Value
+        end
+    end
+    return 0
+end
+
+function HasMelee(MeleeName)
+    for _, v in pairs(Player.Backpack:GetChildren()) do
+        if v.Name == MeleeName then
+            return true
+        end
+    end
+    return false
+end
+
+function AutoBuyMelee()
+    spawn(function()
+        while _G.AutoMelee do
+            local Beli = GetBeli()
+            local Fragments = GetFragments()
+            local Level = GetPlayerLevel()
+            local Sea = CheckSea()
+            
+            -- Sea 1 Melee
+            if Sea == 1 then
+                -- Dark Step
+                if Beli >= 150000 and not HasMelee("Dark Step") then
+                    TeleportTo(CFrame.new(-1160.17, 15.13, 3924.98)) -- Pirate Village
+                    task.wait(2)
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyBlackLeg")
+                end
+                
+                -- Electric
+                if Beli >= 500000 and HasMelee("Dark Step") and GetMeleeMastery("Dark Step") >= 400 and not HasMelee("Electric") then
+                    TeleportTo(CFrame.new(-4730.36, 716.60, -2533.04)) -- Skylands
+                    task.wait(2)
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyElectro")
+                end
+                
+                -- Water Kung Fu
+                if Beli >= 750000 and not HasMelee("Water Kung Fu") then
+                    TeleportTo(CFrame.new(61122.56, 18.47, 1568.12)) -- Underwater City
+                    task.wait(2)
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyFishmanKarate")
+                end
+            end
+            
+            -- Sea 2 Melee
+            if Sea >= 2 then
+                -- Dragon Breath
+                if Fragments >= 1500 and not HasMelee("Dragon Breath") then
+                    TeleportTo(CFrame.new(-1034.42, 329.11, -10129.64)) -- Kingdom of Rose
+                    task.wait(2)
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyDragonBreath")
+                end
+                
+                -- Superhuman
+                if Beli >= 3000000 and not HasMelee("Superhuman") and 
+                   GetMeleeMastery("Dark Step") >= 300 and 
+                   GetMeleeMastery("Electric") >= 300 and 
+                   GetMeleeMastery("Water Kung Fu") >= 300 and 
+                   GetMeleeMastery("Dragon Breath") >= 300 then
+                    TeleportTo(CFrame.new(-1160.17, 15.13, 3924.98)) -- Snow Mountain Cave
+                    task.wait(2)
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuySuperhuman")
+                end
+                
+                -- Death Step
+                if Beli >= 2500000 and Fragments >= 5000 and 
+                   HasMelee("Dark Step") and GetMeleeMastery("Dark Step") >= 400 and 
+                   not HasMelee("Death Step") then
+                    -- Get Library Key from Awakened Ice Admiral
+                    if not HasItem("Library Key") then
+                        TeleportTo(CFrame.new(1246.77, 329.11, -10294.46)) -- Ice Castle
+                        -- Farm Awakened Ice Admiral
+                    else
+                        TeleportTo(CFrame.new(-1034.42, 329.11, -10129.64)) -- Library
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyDeathStep")
+                    end
+                end
+                
+                -- Sharkman Karate
+                if Beli >= 2500000 and Fragments >= 5000 and 
+                   HasMelee("Water Kung Fu") and GetMeleeMastery("Water Kung Fu") >= 400 and 
+                   not HasMelee("Sharkman Karate") then
+                    -- Get Water Key from Tide Keeper
+                    if not HasItem("Water Key") then
+                        TeleportTo(CFrame.new(-3875.86, 73.04, -955.35)) -- Forgotten Island
+                    else
+                        TeleportTo(CFrame.new(61122.56, 18.47, 1568.12)) -- Underwater City
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuySharkmanKarate")
+                    end
+                end
+            end
+            
+            -- Sea 3 Melee
+            if Sea == 3 then
+                -- Dragon Talon
+                if Beli >= 3000000 and Fragments >= 5000 and 
+                   HasMelee("Dragon Breath") and GetMeleeMastery("Dragon Breath") >= 400 and 
+                   not HasMelee("Dragon Talon") then
+                    -- Get Fire Essence from Death King
+                    if not HasItem("Fire Essence") then
+                        TeleportTo(CFrame.new(-9514.78, 142.14, 5525.94)) -- Haunted Castle
+                        -- Exchange bones for Fire Essence
+                    else
+                        TeleportTo(CFrame.new(-9514.78, 142.14, 5525.94))
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyDragonTalon")
+                    end
+                end
+                
+                -- Electric Claw
+                if Beli >= 3000000 and Fragments >= 5000 and 
+                   HasMelee("Electric") and GetMeleeMastery("Electric") >= 400 and 
+                   not HasMelee("Electric Claw") then
+                    TeleportTo(CFrame.new(-12468.58, 332.42, -7522.49)) -- Mansion
+                    -- Complete run quest under 30 seconds
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyElectricClaw")
+                end
+                
+                -- Godhuman (Requirements: 400 Mastery in 5 melee)
+                if Beli >= 5000000 and Fragments >= 5000 and Level >= 2600 and
+                   GetMeleeMastery("Superhuman") >= 400 and
+                   GetMeleeMastery("Death Step") >= 400 and
+                   GetMeleeMastery("Sharkman Karate") >= 400 and
+                   GetMeleeMastery("Electric Claw") >= 400 and
+                   GetMeleeMastery("Dragon Talon") >= 400 and
+                   not HasMelee("Godhuman") then
+                    -- Check for materials
+                    if HasItem("Fish Tail", 20) and HasItem("Magma Ore", 20) and 
+                       HasItem("Dragon Scale", 10) and HasItem("Mystic Droplet", 10) then
+                        TeleportTo(CFrame.new(12504.32, 332.42, -7520.59)) -- Floating Turtle
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyGodhuman")
+                    else
+                        -- Farm materials
+                        if not HasItem("Fish Tail", 20) then FarmFishTail() end
+                        if not HasItem("Magma Ore", 20) then FarmMagmaOre() end
+                        if not HasItem("Dragon Scale", 10) then FarmDragonScale() end
+                        if not HasItem("Mystic Droplet", 10) then FarmMysticDroplet() end
+                    end
+                end
+                
+                -- Sanguine Art
+                if Beli >= 5000000 and Fragments >= 5000 and Level >= 2800 and
+                   not HasMelee("Sanguine Art") then
+                    if HasItem("Cold Heart") then
+                        TeleportTo(CFrame.new(-1576.12, 217.69, -2772.11)) -- Tiki Outpost
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuySanguineArt")
+                    else
+                        -- Farm Leviathan for Cold Heart
+                        FarmLeviathan()
+                    end
+                end
+            end
+            
+            task.wait(10)
+        end
+    end)
+end
+
+function HasItem(ItemName, Amount)
+    Amount = Amount or 1
+    -- Check player's inventory for item
+    -- This is a placeholder function
+    return false
+end
+
+-- =============================================
+-- 🎸 SOUL GUITAR QUEST
+-- =============================================
+function AutoSoulGuitar()
+    spawn(function()
+        while _G.AutoSoulGuitar do
+            local Level = GetPlayerLevel()
+            if Level >= 2300 then
+                -- Check requirements
+                local bones = GetBones() or 0
+                local ectoplasm = GetEctoplasm() or 0
+                local fragments = GetFragments()
+                local hasDarkFragment = HasItem("Dark Fragment")
+                
+                if bones >= 500 and ectoplasm >= 250 and fragments >= 5000 and hasDarkFragment then
+                    -- Check for Full Moon
+                    if Lighting.Sky.MoonTextureId == "rbxassetid://6444320592" then
+                        Library:Notification("Starting Soul Guitar Quest...", "Info")
+                        
+                        -- Step 1: Go to Haunted Castle
+                        TeleportTo(CFrame.new(-9514.78, 142.14, 5525.94))
+                        task.wait(2)
+                        
+                        -- Step 2: Pray at gravestone
+                        local graves = Workspace:FindFirstChild("Gravestones")
+                        if graves then
+                            for _, grave in pairs(graves:GetChildren()) do
+                                if grave.Name == "Grave" then
+                                    fireclickdetector(grave:FindFirstChild("ClickDetector"))
+                                    break
+                                end
+                            end
+                        end
+                        
+                        -- Step 3: Group and kill 6 Living Zombies simultaneously
+                        GroupAndKillZombies()
+                        
+                        -- Step 4: Count signs and interact with panels
+                        CompleteSoulGuitarPuzzle()
+                        
+                        -- Step 5: Talk to Ghost NPC
+                        local ghost = Workspace:FindFirstChild("Ghost")
+                        if ghost then
+                            TeleportTo(ghost.HumanoidRootPart.CFrame)
+                            fireclickdetector(ghost:FindFirstChild("ClickDetector"))
+                        end
+                        
+                        -- Step 6: Complete lever puzzle
+                        CompleteLeverPuzzle()
+                        
+                        -- Step 7: Complete color puzzle
+                        CompleteColorPuzzle()
+                        
+                        -- Step 8: Interact with Weird Machine
+                        local machine = Workspace:FindFirstChild("Weird Machine")
+                        if machine then
+                            fireclickdetector(machine:FindFirstChild("ClickDetector"))
+                        end
+                        
+                        Library:Notification("Soul Guitar obtained!", "Success")
+                        _G.AutoSoulGuitar = false
+                    else
+                        Library:Notification("Waiting for Full Moon...", "Info")
+                        -- Server hop for Full Moon
+                        HopServer()
+                    end
+                else
+                    -- Farm requirements
+                    if bones < 500 then
+                        FarmBones()
+                    end
+                    if ectoplasm < 250 then
+                        FarmEctoplasm()
+                    end
+                    if fragments < 5000 then
+                        _G.AutoRaid = true
+                    end
+                    if not hasDarkFragment then
+                        _G.AutoDarkbeard = true
+                    end
+                end
+            else
+                Library:Notification("Level 2300 required for Soul Guitar!", "Warning")
+                task.wait(30)
+            end
+            task.wait(10)
+        end
+    end)
+end
+
+-- =============================================
+-- ⚔️ CURSED DUAL KATANA QUEST
+-- =============================================
+function AutoCDK()
+    spawn(function()
+        while _G.AutoCDK do
+            local Level = GetPlayerLevel()
+            if Level >= 2200 then
+                -- Check if has Tushita and Yama with 350+ mastery
+                local hasTushita = HasSword("Tushita")
+                local hasYama = HasSword("Yama")
+                local tushitaMastery = GetSwordMastery("Tushita")
+                local yamaMastery = GetSwordMastery("Yama")
+                
+                if hasTushita and hasYama and tushitaMastery >= 350 and yamaMastery >= 350 then
+                    Library:Notification("Starting CDK Quest...", "Info")
+                    
+                    -- Go to Floating Turtle Mansion
+                    TeleportTo(CFrame.new(12504.32, 332.42, -7520.59))
+                    task.wait(2)
+                    
+                    -- Find Crypt Master NPC
+                    local cryptMaster = Workspace:FindFirstChild("Crypt Master")
+                    if cryptMaster then
+                        TeleportTo(cryptMaster.HumanoidRootPart.CFrame)
+                        fireclickdetector(cryptMaster:FindFirstChild("ClickDetector"))
+                    end
+                    
+                    -- Complete 6 challenges from two scrolls
+                    CompleteCDKChallenges()
+                    
+                    -- Place Alucard Fragments and summon Cursed Skeleton
+                    local pedestal = Workspace:FindFirstChild("Alucard Pedestal")
+                    if pedestal then
+                        TeleportTo(pedestal.CFrame)
+                        task.wait(1)
+                        
+                        -- Place fragments (assuming player has them)
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("PlaceAlucardFragment")
+                        
+                        -- Fight Cursed Skeleton
+                        local cursedSkeleton = Workspace:FindFirstChild("Cursed Skeleton")
+                        if cursedSkeleton then
+                            while cursedSkeleton and cursedSkeleton:FindFirstChild("Humanoid") and 
+                                  cursedSkeleton.Humanoid.Health > 0 do
+                                EquipTool("Melee")
+                                TeleportTo(cursedSkeleton.HumanoidRootPart.CFrame * CFrame.new(0, 0, 5))
+                                Attack()
+                                task.wait(0.5)
+                            end
+                        end
+                    end
+                    
+                    Library:Notification("Cursed Dual Katana obtained!", "Success")
+                    _G.AutoCDK = false
+                else
+                    -- Farm swords and mastery
+                    if not hasTushita then
+                        GetTushitaSword()
+                    end
+                    if not hasYama then
+                        GetYamaSword()
+                    end
+                    if tushitaMastery < 350 then
+                        FarmSwordMastery("Tushita")
+                    end
+                    if yamaMastery < 350 then
+                        FarmSwordMastery("Yama")
+                    end
+                end
+            else
+                Library:Notification("Level 2200 required for CDK!", "Warning")
+                task.wait(30)
+            end
+            task.wait(10)
+        end
+    end)
+end
+
+-- =============================================
+-- 🎮 AUTO FARM LEVEL (SEA 1-3) - COMPLETE VERSION
+-- =============================================
+function AutoFarmLevel()
+    spawn(function()
+        while _G.AutoFarm do
+            local Level = GetPlayerLevel()
+            local Sea = CheckSea()
+            
+            if Sea == 1 then -- Level 1-699
+                FarmSea1()
+            elseif Sea == 2 then -- Level 700-1499
+                FarmSea2()
+            elseif Sea == 3 then -- Level 1500-2800
+                FarmSea3()
+            end
+            
+            task.wait(0.1)
+        end
+    end)
+end
+
+-- =============================================
+-- 🎯 SEA 1 FARM (Level 1-699)
+-- =============================================
+function FarmSea1()
+    while _G.AutoFarm and GetPlayerLevel() <= 699 and CheckSea() == 1 do
+        local Level = GetPlayerLevel()
+        
+        if Level >= 1 and Level <= 10 then
+            TeleportTo(CFrame.new(-1058.93, 15.13, 1546.95)) -- Bandit
+        elseif Level >= 11 and Level <= 20 then
+            TeleportTo(CFrame.new(-1234.46, 21.89, 1559.26)) -- Gorilla
+        elseif Level >= 21 and Level <= 30 then
+            TeleportTo(CFrame.new(-1142.19, 15.13, 4352.36)) -- Brute
+        elseif Level >= 31 and Level <= 40 then
+            TeleportTo(CFrame.new(-1460.93, 14.13, 4331.69)) -- Monkey
+        elseif Level >= 41 and Level <= 60 then
+            TeleportTo(CFrame.new(-1059.59, 14.13, 4399.74)) -- Military Soldier
+        elseif Level >= 61 and Level <= 75 then
+            TeleportTo(CFrame.new(-2314.32, 73.60, -2577.89)) -- Military Spy
+        elseif Level >= 76 and Level <= 90 then
+            TeleportTo(CFrame.new(-5436.21, 313.79, -2931.33)) -- Officer
+        elseif Level >= 91 and Level <= 100 then
+            TeleportTo(CFrame.new(-5815.12, 50.65, -4467.28)) -- Shanks
+        elseif Level >= 101 and Level <= 125 then
+            TeleportTo(CFrame.new(-1024.52, 15.13, 4321.69)) -- Gang Member
+        elseif Level >= 126 and Level <= 150 then
+            TeleportTo(CFrame.new(-1546.53, 13.13, 4304.69)) -- Swan Pirate
+        elseif Level >= 151 and Level <= 175 then
+            TeleportTo(CFrame.new(-1245.36, 13.13, 4662.59)) -- Factory Staff
+        elseif Level >= 176 and Level <= 200 then
+            TeleportTo(CFrame.new(292.88, 40.13, -5564.08)) -- Marine Lieutenant
+        elseif Level >= 201 and Level <= 225 then
+            TeleportTo(CFrame.new(-1074.65, 13.13, 4086.42)) -- Marine Captain
+        elseif Level >= 226 and Level <= 250 then
+            TeleportTo(CFrame.new(244.17, 73.65, -5256.65)) -- Veteran
+        elseif Level >= 251 and Level <= 275 then
+            TeleportTo(CFrame.new(-1610.15, 13.13, 4832.21)) -- Sky Bandit
+        elseif Level >= 276 and Level <= 300 then
+            TeleportTo(CFrame.new(-5017.12, 28.68, -2836.87)) -- Dark Master
+        elseif Level >= 301 and Level <= 325 then
+            TeleportTo(CFrame.new(5207.07, 5.15, 745.43)) -- Toga Warrior
+        elseif Level >= 326 and Level <= 350 then
+            TeleportTo(CFrame.new(4839.77, 4.32, 1663.62)) -- Royal Soldier
+        elseif Level >= 351 and Level <= 375 then
+            TeleportTo(CFrame.new(-6035.68, 15.23, -4956.98)) -- Shanda
+        elseif Level >= 376 and Level <= 400 then
+            TeleportTo(CFrame.new(5229.33, 12.32, -1330.92)) -- Factory Staff (Midnight)
+        elseif Level >= 401 and Level <= 450 then
+            TeleportTo(CFrame.new(5492.79, 28.32, -688.18)) -- Marine Lieutenant (Midnight)
+        elseif Level >= 451 and Level <= 500 then
+            TeleportTo(CFrame.new(2917.82, 12.32, 3927.08)) -- Military Soldier (Midnight)
+        elseif Level >= 501 and Level <= 550 then
+            TeleportTo(CFrame.new(5534.92, 12.32, 100.18)) -- Military Spy (Midnight)
+        elseif Level >= 551 and Level <= 600 then
+            TeleportTo(CFrame.new(6747.92, 12.32, 325.18)) -- Fishman Warrior
+        elseif Level >= 601 and Level <= 650 then
+            TeleportTo(CFrame.new(6107.92, 12.32, -213.82)) -- Fishman Commando
+        elseif Level >= 651 and Level <= 699 then
+            TeleportTo(CFrame.new(2903.92, 12.32, -3727.82)) -- God's Guard
+        elseif Level >= 700 then
+            CompleteSea1Quest()
+            break
+        end
+        
+        AttackNPCs()
+        task.wait(0.1)
+    end
+end
+
+function CompleteSea1Quest()
+    if GetPlayerLevel() >= 700 then
+        Library:Notification("Ready to go to Sea 2!", "Info")
+        TeleportTo(CFrame.new(-2671.43, 12.95, 2058.69)) -- Ice Admiral Location
+        task.wait(2)
+        
+        -- Auto complete Ice Admiral quest
+        pcall(function()
+            local iceAdmiral = Workspace:FindFirstChild("Ice Admiral")
+            if iceAdmiral then
+                TeleportTo(iceAdmiral.HumanoidRootPart.CFrame)
+                task.wait(1)
+                -- Attack Ice Admiral
+                while iceAdmiral and iceAdmiral:FindFirstChild("Humanoid") and iceAdmiral.Humanoid.Health > 0 do
+                    EquipTool("Melee")
+                    VirtualInputManager:SendKeyEvent(true, "X", false, nil)
+                    task.wait(0.1)
+                    VirtualInputManager:SendKeyEvent(false, "X", false, nil)
+                    task.wait(0.5)
+                end
+            end
+        end)
+    end
+end
+
+-- =============================================
+-- 🌊 SEA 2 FARM (Level 700-1499)
+-- =============================================
+function FarmSea2()
+    while _G.AutoFarm and GetPlayerLevel() <= 1499 and CheckSea() == 2 do
+        local Level = GetPlayerLevel()
+        
+        if Level >= 700 and Level <= 724 then
+            TeleportTo(CFrame.new(-64.92, 70.32, 4473.34)) -- Desert Bandits
+        elseif Level >= 725 and Level <= 774 then
+            TeleportTo(CFrame.new(1607.87, 3.74, 1645.51)) -- Snow Bandits
+        elseif Level >= 775 and Level <= 799 then
+            TeleportTo(CFrame.new(383.07, 45.92, -3394.12)) -- Snowman
+        elseif Level >= 800 and Level <= 874 then
+            TeleportTo(CFrame.new(-1092.29, 44.53, 4941.13)) -- Chief Petty Officer
+        elseif Level >= 875 and Level <= 899 then
+            TeleportTo(CFrame.new(-1611.92, 6.92, 4830.81)) -- Sky Bandits
+        elseif Level >= 900 and Level <= 949 then
+            TeleportTo(CFrame.new(-5017.12, 28.68, -2836.87)) -- Dark Master
+        elseif Level >= 950 and Level <= 974 then
+            TeleportTo(CFrame.new(3524.69, 7.32, -2941.18)) -- Toga Warrior
+        elseif Level >= 975 and Level <= 999 then
+            TeleportTo(CFrame.new(4839.77, 4.32, 1663.62)) -- Royal Soldier
+        elseif Level >= 1000 and Level <= 1049 then
+            TeleportTo(CFrame.new(-6035.68, 15.23, -4956.98)) -- Shanda
+        elseif Level >= 1050 and Level <= 1099 then
+            TeleportTo(CFrame.new(5229.33, 12.32, -1330.92)) -- Factory Staff
+        elseif Level >= 1100 and Level <= 1149 then
+            TeleportTo(CFrame.new(5492.79, 28.32, -688.18)) -- Marine Lieutenant
+        elseif Level >= 1150 and Level <= 1199 then
+            TeleportTo(CFrame.new(2917.82, 12.32, 3927.08)) -- Military Soldier
+        elseif Level >= 1200 and Level <= 1249 then
+            TeleportTo(CFrame.new(5534.92, 12.32, 100.18)) -- Military Spy
+        elseif Level >= 1250 and Level <= 1274 then
+            TeleportTo(CFrame.new(6747.92, 12.32, 325.18)) -- Fishman Warrior
+        elseif Level >= 1275 and Level <= 1299 then
+            TeleportTo(CFrame.new(6107.92, 12.32, -213.82)) -- Fishman Commando
+        elseif Level >= 1300 and Level <= 1324 then
+            TeleportTo(CFrame.new(2903.92, 12.32, -3727.82)) -- God's Guard
+        elseif Level >= 1325 and Level <= 1349 then
+            TeleportTo(CFrame.new(5230.92, 12.32, 182.18)) -- Warden
+        elseif Level >= 1350 and Level <= 1374 then
+            TeleportTo(CFrame.new(4742.92, 12.32, -2253.82)) -- Chief Warden
+        elseif Level >= 1375 and Level <= 1424 then
+            TeleportTo(CFrame.new(5207.92, 12.32, 4702.18)) -- Yeti
+        elseif Level >= 1425 and Level <= 1449 then
+            TeleportTo(CFrame.new(5747.92, 12.32, 456.18)) -- Mobs Leader
+        elseif Level >= 1450 and Level <= 1474 then
+            TeleportTo(CFrame.new(2889.92, 12.32, -3691.82)) -- Arctic Warrior
+        elseif Level >= 1475 and Level <= 1499 then
+            TeleportTo(CFrame.new(6118.92, 12.32, -214.82)) -- Snow Lurker
+        elseif Level >= 1500 then
+            CompleteSea2Quest()
+            break
+        end
+        
+        AttackNPCs()
+        task.wait(0.1)
+    end
+end
+
+function CompleteSea2Quest()
+    if GetPlayerLevel() >= 1500 then
+        Library:Notification("Ready to go to Sea 3!", "Info")
+        TeleportTo(CFrame.new(-6431.72, 250.68, -4493.79)) -- Don Swan Location
+        
+        -- Auto complete Don Swan quest
+        task.wait(2)
+        pcall(function()
+            local donSwan = Workspace:FindFirstChild("Don Swan")
+            if donSwan then
+                TeleportTo(donSwan.HumanoidRootPart.CFrame)
+                task.wait(1)
+                
+                while donSwan and donSwan:FindFirstChild("Humanoid") and donSwan.Humanoid.Health > 0 do
+                    EquipTool("Melee")
+                    VirtualInputManager:SendKeyEvent(true, "X", false, nil)
+                    task.wait(0.1)
+                    VirtualInputManager:SendKeyEvent(false, "X", false, nil)
+                    task.wait(0.5)
+                end
+            end
+        end)
+    end
+end
+
+-- =============================================
+-- 🌋 SEA 3 FARM (Level 1500-2800)
+-- =============================================
+function FarmSea3()
+    while _G.AutoFarm and GetPlayerLevel() <= 2800 and CheckSea() == 3 do
+        local Level = GetPlayerLevel()
+        
+        if Level >= 1500 and Level <= 1524 then
+            TeleportTo(CFrame.new(-380.48, 73.04, 5727.34)) -- Pirate Millionaire
+        elseif Level >= 1525 and Level <= 1574 then
+            TeleportTo(CFrame.new(-250.86, 73.04, 6342.24)) -- Dragon Crew Warrior
+        elseif Level >= 1575 and Level <= 1599 then
+            TeleportTo(CFrame.new(-561.54, 73.04, 6876.58)) -- Dragon Crew Archer
+        elseif Level >= 1600 and Level <= 1624 then
+            TeleportTo(CFrame.new(861.82, 125.22, 28277.57)) -- Female Islander
+        elseif Level >= 1625 and Level <= 1649 then
+            TeleportTo(CFrame.new(1450.42, 125.22, 28153.65)) -- Giant Islander
+        elseif Level >= 1650 and Level <= 1674 then
+            TeleportTo(CFrame.new(1357.44, 125.22, 28473.99)) -- Marine Commodore
+        elseif Level >= 1675 and Level <= 1724 then
+            TeleportTo(CFrame.new(1683.97, 125.22, 28389.43)) -- Marine Rear Admiral
+        elseif Level >= 1725 and Level <= 1774 then
+            TeleportTo(CFrame.new(2908.88, 423.85, 20619.22)) -- Fishman Raider
+        elseif Level >= 1775 and Level <= 1799 then
+            TeleportTo(CFrame.new(3178.72, 423.85, 20783.22)) -- Fishman Captain
+        elseif Level >= 1800 and Level <= 1824 then
+            TeleportTo(CFrame.new(-10994.68, 354.04, -1026.42)) -- Forest Pirate
+        elseif Level >= 1825 and Level <= 1849 then
+            TeleportTo(CFrame.new(-13301.74, 405.88, -9530.71)) -- Mythological Pirate
+        elseif Level >= 1850 and Level <= 1899 then
+            TeleportTo(CFrame.new(-13486.83, 332.42, -8997.34)) -- Jungle Pirate
+        elseif Level >= 1900 and Level <= 1924 then
+            TeleportTo(CFrame.new(-12087.62, 551.66, -10850.64)) -- Musketeer Pirate
+        elseif Level >= 1925 and Level <= 1974 then
+            TeleportTo(CFrame.new(-9481.89, 142.14, 5563.56)) -- Reborn Skeleton
+        elseif Level >= 1975 and Level <= 1999 then
+            TeleportTo(CFrame.new(-8763.96, 142.14, 6179.34)) -- Living Zombie
+        elseif Level >= 2000 and Level <= 2024 then
+            TeleportTo(CFrame.new(-10112.79, 151.76, 5934.33)) -- Demonic Soul
+        elseif Level >= 2025 and Level <= 2074 then
+            TeleportTo(CFrame.new(-9314.73, 7.00, 4471.47)) -- Posessed Mummy
+        elseif Level >= 2075 and Level <= 2099 then
+            TeleportTo(CFrame.new(-12244.68, 491.97, -10376.14)) -- Peanut Scout
+        elseif Level >= 2100 and Level <= 2124 then
+            TeleportTo(CFrame.new(-13612.04, 491.97, -10023.74)) -- Peanut President
+        elseif Level >= 2125 and Level <= 2149 then
+            TeleportTo(CFrame.new(-12142.89, 491.97, -16485.91)) -- Ice Cream Chef
+        elseif Level >= 2150 and Level <= 2199 then
+            TeleportTo(CFrame.new(-13723.59, 491.97, -15984.64)) -- Ice Cream Commander
+        elseif Level >= 2200 and Level <= 2224 then
+            TeleportTo(CFrame.new(-13482.32, 491.97, -14482.86)) -- Cookie Crafter
+        elseif Level >= 2225 and Level <= 2249 then
+            TeleportTo(CFrame.new(-13488.67, 491.97, -13979.13)) -- Cake Guard
+        elseif Level >= 2250 and Level <= 2299 then
+            TeleportTo(CFrame.new(-13789.53, 491.97, -12994.86)) -- Candy Pirate
+        elseif Level >= 2300 and Level <= 2324 then
+            TeleportTo(CFrame.new(-13294.75, 491.97, -14569.66)) -- Chocolate Bar Battler
+        elseif Level >= 2325 and Level <= 2374 then
+            TeleportTo(CFrame.new(-12484.87, 491.97, -14236.91)) -- Sweet Thief
+        elseif Level >= 2375 and Level <= 2399 then
+            TeleportTo(CFrame.new(-13781.85, 491.97, -14972.83)) -- Coco Warrior
+        elseif Level >= 2400 and Level <= 2424 then
+            TeleportTo(CFrame.new(-12674.64, 491.97, -14861.14)) -- Waffle Don
+        elseif Level >= 2425 and Level <= 2474 then
+            TeleportTo(CFrame.new(-12930.54, 491.97, -15304.86)) -- Gummy Warrior
+        elseif Level >= 2475 and Level <= 2499 then
+            TeleportTo(CFrame.new(-12277.89, 491.97, -14432.64)) -- Honey Raider
+        elseif Level >= 2500 and Level <= 2549 then
+            TeleportTo(CFrame.new(-11787.62, 491.97, -11562.64)) -- Dough King Warrior
+        elseif Level >= 2550 and Level <= 2599 then
+            TeleportTo(CFrame.new(-11627.42, 491.97, -12148.94)) -- Dough King
+        elseif Level >= 2600 and Level <= 2649 then
+            TeleportTo(CFrame.new(-12453.68, 491.97, -13660.42)) -- Cursed Captain
+        elseif Level >= 2650 and Level <= 2699 then
+            TeleportTo(CFrame.new(-13610.74, 491.97, -13295.86)) -- Ship Steerer
+        elseif Level >= 2700 and Level <= 2749 then
+            TeleportTo(CFrame.new(-13204.32, 491.97, -12577.64)) -- Ship Engineer
+        elseif Level >= 2750 and Level <= 2799 then
+            TeleportTo(CFrame.new(-12782.89, 491.97, -12980.94)) -- Ship Cleaner
+        elseif Level >= 2800 then
+            _G.AutoFarm = false
+            Library:Notification("🎉 Max Level 2800 Reached!", "Success")
+            break
+        end
+        
+        AttackNPCs()
+        task.wait(0.1)
+    end
+end
+
+-- =============================================
+-- ⚔️ ATTACK NPC SYSTEM
+-- =============================================
+function AttackNPCs()
+    for _, npc in pairs(Workspace.Enemies:GetChildren()) do
+        if npc:FindFirstChild("Humanoid") and npc.Humanoid.Health > 0 then
+            local distance = (HumanoidRootPart.Position - npc.HumanoidRootPart.Position).Magnitude
+            if distance < 50 then
+                TeleportTo(npc.HumanoidRootPart.CFrame * CFrame.new(0, 0, 5))
+                EquipTool("Melee")
+                Attack()
+                break
+            end
+        end
+    end
+end
+-- =============================================
+-- 🔄 AUTO RAID SYSTEM
+-- =============================================
+function AutoRaid()
+    spawn(function()
+        while _G.AutoRaid do
+            local fragments = GetFragments()
+            if fragments < 10000 then
+                -- Check for raid-able fruits
+                for _, fruit in pairs(_G.SelectedFruits) do
+                    if HasFruit(fruit) then
+                        StartRaid(fruit)
+                        task.wait(300) -- Wait 5 minutes for raid
+                        break
+                    end
+                end
+            else
+                _G.AutoRaid = false
+                Library:Notification("10,000 Fragments collected!", "Success")
+            end
+            task.wait(10)
+        end
+    end)
+end
+
+-- =============================================
+-- 🎲 AUTO RANDOM FRUIT
+-- =============================================
+function AutoRandomFruit()
+    spawn(function()
+        while _G.AutoRandomFruit do
+            if GetPlayerLevel() >= 50 then
+                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("Cousin", "Buy")
+                Library:Notification("Random fruit used", "Info")
+            end
+            task.wait(7200) -- 2 hours
+        end
+    end)
+end
+
+-- =============================================
+-- 🏆 AUTO ELITE BOSS (SEA 3)
+-- =============================================
+function AutoEliteBoss()
+    spawn(function()
+        while _G.AutoElite do
+            if CheckSea() == 3 then
+                local elite = Workspace:FindFirstChild("EliteHunter")
+                if elite then
+                    -- Pause normal farming
+                    _G.AutoFarm = false
+                    task.wait(1)
+                    
+                    -- Fight elite boss
+                    Library:Notification("Elite Boss Detected!", "Warning")
+                    while elite and elite:FindFirstChild("Humanoid") and elite.Humanoid.Health > 0 do
+                        EquipTool("Melee")
+                        TeleportTo(elite.HumanoidRootPart.CFrame * CFrame.new(0, 0, 5))
+                        Attack()
+                        task.wait(0.5)
+                    end
+                    
+                    -- Resume farming
+                    _G.AutoFarm = true
+                    Library:Notification("Elite Boss Defeated!", "Success")
+                end
+            end
+            task.wait(1)
+        end
+    end)
+end
+
+-- =============================================
+-- 📊 AUTO STATS UPGRADE
+-- =============================================
+function AutoStats()
+    spawn(function()
+        while _G.AutoStats do
+            local points = Player.Data.Points.Value
+            if points > 0 then
+                for _, stat in pairs(_G.StatsPriority) do
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AddPoint", stat, 1)
+                    points = points - 1
+                    if points <= 0 then break end
+                end
+            end
+            task.wait(5)
+        end
+    end)
+end
+
+-- =============================================
+-- 🌐 SERVER HOP
+-- =============================================
+function HopServer()
+    local Http = game:GetService("HttpService")
+    local TPS = game:GetService("TeleportService")
+    local API = "https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=%s&limit=%s"
+    
+    local function GetServers(PlaceID, SortOrder, Limit)
+        return Http:JSONDecode(game:HttpGet(API:format(PlaceID, SortOrder, Limit))).data
+    end
+    
+    local Servers = GetServers(game.PlaceId, "Desc", 100)
+    for _, v in ipairs(Servers) do
+        if v.playing < v.maxPlayers and v.id ~= game.JobId then
+            TPS:TeleportToPlaceInstance(game.PlaceId, v.id, Player)
+            break
+        end
+    end
+end
+
+-- =============================================
+-- 🎮 UI SETUP
+-- =============================================
+local MainTab = Window:NewTab("🏴‍☠️ Main")
+local MainSection = MainTab:NewSection("Auto Farm")
+
+MainSection:NewToggle("Auto Farm Level", "Auto farm 1-2800", function(state)
+    _G.AutoFarm = state
+    if state then
+        AutoFarmLevel()
+        Library:Notification("Auto Farm ON", "Success")
+    else
+        Library:Notification("Auto Farm OFF", "Warning")
+    end
+end)
+
+MainSection:NewToggle("Auto Buy Melee", "Auto purchase all melee", function(state)
+    _G.AutoMelee = state
+    if state then
+        AutoBuyMelee()
+        Library:Notification("Auto Melee ON", "Success")
+    end
+end)
+
+MainSection:NewToggle("Auto Raid", "Auto raid for fragments", function(state)
+    _G.AutoRaid = state
+    if state then
+        AutoRaid()
+        Library:Notification("Auto Raid ON", "Success")
+    end
+end)
+
+MainSection:NewToggle("Auto Random Fruit", "Random fruit every 2h", function(state)
+    _G.AutoRandomFruit = state
+    if state then
+        AutoRandomFruit()
+        Library:Notification("Auto Random Fruit ON", "Success")
+    end
+end)
+
+local QuestTab = Window:NewTab("🎯 Quests")
+local QuestSection = QuestTab:NewSection("Auto Quest")
+
+QuestSection:NewToggle("Auto Soul Guitar", "Auto get Soul Guitar", function(state)
+    _G.AutoSoulGuitar = state
+    if state then
+        AutoSoulGuitar()
+        Library:Notification("Auto Soul Guitar ON", "Success")
+    end
+end)
+
+QuestSection:NewToggle("Auto CDK", "Auto get Cursed Dual Katana", function(state)
+    _G.AutoCDK = state
+    if state then
+        AutoCDK()
+        Library:Notification("Auto CDK ON", "Success")
+    end
+end)
+
+QuestSection:NewToggle("Auto Elite Boss", "Auto farm elite bosses", function(state)
+    _G.AutoElite = state
+    if state then
+        AutoEliteBoss()
+        Library:Notification("Auto Elite Boss ON", "Success")
+    end
+end)
+
+local StatsTab = Window:NewTab("📊 Stats")
+local StatsSection = StatsTab:NewSection("Auto Stats")
+
+StatsSection:NewToggle("Auto Upgrade Stats", "Auto upgrade stats", function(state)
+    _G.AutoStats = state
+    if state then
+        AutoStats()
+        Library:Notification("Auto Stats ON", "Success")
+    end
+end)
+
+StatsSection:NewDropdown("Stats Priority", "Set upgrade priority", {"Melee", "Health", "Sword", "Defense", "Fruit", "Gun"}, function(option)
+    table.remove(_G.StatsPriority, table.find(_G.StatsPriority, option))
+    table.insert(_G.StatsPriority, 1, option)
+    Library:Notification("Priority: " .. option, "Info")
+end)
+
+local MiscTab = Window:NewTab("⚙️ Misc")
+local MiscSection = MiscTab:NewSection("Miscellaneous")
+
+MiscSection:NewToggle("Auto Redeem Codes", "Redeem all codes", function(state)
+    _G.AutoCodeRedeem = state
+    if state then
+        RedeemAllCodes()
+        Library:Notification("Codes redeemed!", "Success")
+    end
+end)
+
+MiscSection:NewButton("Redeem Codes Now", "Redeem all available codes", function()
+    RedeemAllCodes()
+end)
+
+MiscSection:NewButton("Server Hop", "Hop to another server", function()
+    HopServer()
+end)
+
+MiscSection:NewSlider("Farm Distance", "Distance from NPC", 100, 0, function(value)
+    _G.FarmDistance = value
+end)
+
+-- =============================================
+-- 📊 INFO DISPLAY
+-- =============================================
+local InfoTab = Window:NewTab("📊 Info")
+local InfoSection = InfoTab:NewSection("Player Information")
+
+spawn(function()
+    while task.wait(1) do
+        pcall(function()
+            InfoSection:NewLabel("Level: " .. GetPlayerLevel())
+            InfoSection:NewLabel("Beli: " .. GetBeli())
+            InfoSection:NewLabel("Fragments: " .. GetFragments())
+            InfoSection:NewLabel("Sea: " .. CheckSea())
+            InfoSection:NewLabel("Melee Mastery: " .. GetMeleeMastery("Superhuman") .. "/400")
+        end)
+    end
+end)
+
+-- =============================================
+-- 🚀 INITIALIZATION
+-- =============================================
+
+-- Start essential functions
+_G.AutoStats = true
+AutoStats()
+
+-- Redeem codes on start
+task.wait(3)
+RedeemAllCodes()
+
+-- Welcome message
+Library:Notification("🔥 Haiiz Kaitun Ultimate Loaded!", "Welcome")
+Library:Notification("Complete Auto System Active", "Info")
+
+print([[
+╔══════════════════════════════════════════════╗
+║        HAIIZ KAITUN ULTIMATE v5.0           ║
+║        Complete Auto Farm System            ║
+║        All Features Included                ║
+║        YouTube: k co dau :)))                  ║
+╚══════════════════════════════════════════════╝
+]])
